@@ -1,1 +1,1 @@
-nslookup relays.net.anydesk.com
+relays.net.anydesk.com
