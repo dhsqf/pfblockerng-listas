@@ -1,5 +1,6 @@
 autoatendimento.bb.com.br
 internetbanking.caixa.gov.br
+gerenciador.caixa.gov.br
 banco.santander.com.br
 www.bb.com.br
 www.caixa.gov.br
@@ -12,3 +13,4 @@ www.bnb.gov.br
 www.bancoob.com.br
 www.sicredi.com.br
 ibpj.sicredi.com.br
+
