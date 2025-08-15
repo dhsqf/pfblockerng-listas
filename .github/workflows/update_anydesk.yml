@@ -1,0 +1,30 @@
+name: Atualizar IPs AnyDesk
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # Executa a cada 6 horas
+  workflow_dispatch:        # Permite execução manual
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clonar repositório
+        uses: actions/checkout@v3
+
+      - name: Instalar ferramentas DNS
+        run: sudo apt-get install -y dnsutils
+
+      - name: Gerar lista de IPs
+        run: |
+          dig +short relays.net.anydesk.com > anydesk_ips.txt
+          sort -u anydesk_ips.txt -o anydesk_ips.txt
+
+      - name: Commit e push
+        run: |
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
+          git add anydesk_ips.txt
+          git commit -m "Atualização automática de IPs AnyDesk"
+          git push
