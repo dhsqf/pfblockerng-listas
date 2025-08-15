@@ -22,9 +22,12 @@ jobs:
           sort -u anydesk_ips.txt -o anydesk_ips.txt
 
       - name: Commit e push
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           git config --global user.name "GitHub Action"
           git config --global user.email "action@github.com"
+          git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}
           git add anydesk_ips.txt
-          git commit -m "Atualização automática de IPs AnyDesk"
+          git commit -m "Atualização automática de IPs AnyDesk" || echo "Nada para atualizar"
           git push
