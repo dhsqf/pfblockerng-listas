@@ -22,10 +22,11 @@ jobs:
           pip install requests
           python aws-ips.py
 
-      - name: Commit e push
+     - name: Commit updated IPs
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add aws_ec2_ips.txt
-          git commit -m "Atualiza IPs EC2 da AWS"
+          git add aws_ips.txt
+          git commit -m "Atualiza IPs AWS (multi-região)"
           git push
+
