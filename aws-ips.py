@@ -1,20 +1,37 @@
-import requests
+name: Atualizar IPs AWS
 
-# Baixa o JSON oficial da AWS
-url = "https://ip-ranges.amazonaws.com/ip-ranges.json"
-data = requests.get(url).json()
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
 
-# Lista de regiões e serviços que você quer incluir
-regioes = ['sa-east-1', 'us-east-1', 'us-west-2', 'eu-west-1']
-servicos = ['EC2', 'S3', 'CLOUDFRONT']
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
 
-# Filtra os IPs
-ips_filtrados = set()
-for item in data['prefixes']:
-    if item['region'] in regioes and item['service'] in servicos:
-        ips_filtrados.add(item['ip_prefix'])
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
 
-# Salva no formato compatível com pfSense
-with open("aws_ips.txt", "w") as f:
-    for ip in sorted(ips_filtrados):
-        f.write(ip + "\n")
+      - name: Instalar dependências
+        run: pip install requests
+
+      - name: Rodar script
+        run: python aws_ip_filter.py
+
+      - name: Verificar arquivo gerado
+        run: |
+          ls -l aws_ips.txt
+          cat aws_ips.txt
+
+      - name: Commit e push
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add aws_ips.txt
+          git commit -m "Atualiza IPs AWS"
+          git push
