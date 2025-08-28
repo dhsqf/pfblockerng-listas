@@ -20,7 +20,7 @@ jobs:
       - name: Instalar dependências e rodar script
         run: |
           pip install requests
-          python aws_ip_filter.py
+          python aws-ips.py
 
       - name: Commit e push
         run: |
