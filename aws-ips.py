@@ -4,11 +4,17 @@ import requests
 url = "https://ip-ranges.amazonaws.com/ip-ranges.json"
 data = requests.get(url).json()
 
-# Filtra IPs do serviço EC2 na região sa-east-1 (São Paulo)
-ips = [item['ip_prefix'] for item in data['prefixes']
-       if item['service'] == 'EC2' and item['region'] == 'sa-east-1']
+# Lista de regiões e serviços que você quer incluir
+regioes = ['sa-east-1', 'us-east-1', 'us-west-2', 'eu-west-1']
+servicos = ['EC2', 'S3', 'CLOUDFRONT']
 
-# Salva em formato compatível com pfSense
-with open("aws_ec2_ips.txt", "w") as f:
-    for ip in ips:
+# Filtra os IPs
+ips_filtrados = set()
+for item in data['prefixes']:
+    if item['region'] in regioes and item['service'] in servicos:
+        ips_filtrados.add(item['ip_prefix'])
+
+# Salva no formato compatível com pfSense
+with open("aws_ips.txt", "w") as f:
+    for ip in sorted(ips_filtrados):
         f.write(ip + "\n")
