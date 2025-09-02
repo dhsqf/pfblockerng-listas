@@ -26,27 +26,36 @@ def filtrar_ips(data, servico, regiao=None):
     return [prefix['ip_prefix'] for prefix in data['prefixes']
             if prefix['service'] == servico and (regiao is None or prefix['region'] == regiao)]
 
+def conteudo_arquivo_existente(caminho):
+    if not os.path.exists(caminho):
+        return ""
+    with open(caminho, "r") as f:
+        return f.read()
+
 def salvar_em_arquivo(nome_arquivo, lista_ips):
     lista_unica = sorted(set(lista_ips))
-    with open(nome_arquivo, "w") as f:
-        for ip in lista_unica:
-            f.write(ip + "\n")
-    print(f"✅ IPs salvos em: {nome_arquivo}")
-    return nome_arquivo
+    novo_conteudo = "\n".join(lista_unica) + "\n"
+    conteudo_antigo = conteudo_arquivo_existente(nome_arquivo)
 
-def arquivo_foi_modificado(caminho):
-    resultado = subprocess.run(["git", "status", "--porcelain", caminho], capture_output=True, text=True)
-    return bool(resultado.stdout.strip())
+    if novo_conteudo != conteudo_antigo:
+        with open(nome_arquivo, "w") as f:
+            f.write(novo_conteudo)
+        print(f"✅ IPs atualizados e salvos em: {nome_arquivo}")
+        return True  # houve alteração
+    else:
+        print("ℹ️ IPs não mudaram. Arquivo permanece o mesmo.")
+        return False  # sem alteração
 
 def atualizar_git(arquivo):
-    if arquivo_foi_modificado(arquivo):
-        subprocess.run(["git", "add", arquivo])
-        commit_msg = f"Atualização automática: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-        subprocess.run(["git", "commit", "-m", commit_msg])
+    subprocess.run(["git", "add", arquivo])
+    commit_msg = f"Atualização automática: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+    resultado = subprocess.run(["git", "commit", "-m", commit_msg], capture_output=True, text=True)
+
+    if "nothing to commit" in resultado.stdout.lower():
+        print("ℹ️ Nenhuma alteração detectada pelo Git. Nada para enviar.")
+    else:
         subprocess.run(["git", "push"])
         print("🚀 Alterações enviadas para o GitHub.")
-    else:
-        print("ℹ️ Nenhuma alteração detectada. Nada para enviar.")
 
 def main():
     dados = baixar_dados_aws()
@@ -55,8 +64,12 @@ def main():
         ips = filtrar_ips(dados, servico, regiao)
         print(f"🔍 {servico} ({regiao if regiao else 'Global'}): {len(ips)} IPs")
         todos_ips.extend(ips)
-    arquivo = salvar_em_arquivo(ARQUIVO_SAIDA, todos_ips)
-    atualizar_git(arquivo)
+
+    houve_alteracao = salvar_em_arquivo(ARQUIVO_SAIDA, todos_ips)
+    if houve_alteracao:
+        atualizar_git(ARQUIVO_SAIDA)
+    else:
+        print("🛑 Nenhuma atualização necessária no GitHub.")
 
 if __name__ == "__main__":
     main()
