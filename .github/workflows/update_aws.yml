@@ -2,7 +2,7 @@ name: Atualizar IPs AWS
 
 on:
   schedule:
-    - cron: '0 6 * * *'  # 3h da manhã no Brasil (UTC+3)
+    - cron: '0 6 * * *'  # 3h da manhã no Brasil (UTC−3)
   workflow_dispatch:
 
 jobs:
@@ -39,3 +39,4 @@ jobs:
             git add providers/aws_ips.txt
             git commit -m "Atualiza IPs AWS: $(date +'%Y-%m-%d %H:%M:%S')"
             git push
+          fi
