@@ -15,10 +15,13 @@ def buscar_ips_onedrive():
 
     ips = set()
     for item in dados:
-        if "OneDrive" in item.get("serviceAreaDisplayName", ""):
+        nome_servico = item.get("serviceAreaDisplayName", "")
+        if "OneDrive" in nome_servico:
+            print(f"📦 Encontrado bloco: {nome_servico}")
             for ip in item.get("ips", []):
                 ips.add(ip)
 
+    print(f"🔢 Total de IPs encontrados: {len(ips)}")
     return sorted(ips)
 
 def salvar_em_arquivo(lista_ips, caminho):
@@ -39,7 +42,7 @@ def salvar_em_arquivo(lista_ips, caminho):
 def main():
     ips = buscar_ips_onedrive()
     if not ips:
-        print("🛑 Nenhum IP encontrado.")
+        print("🛑 Nenhum IP encontrado. Verifique o endpoint ou os filtros.")
         return
 
     alterado = salvar_em_arquivo(ips, ARQUIVO_SAIDA)
