@@ -1,55 +1,37 @@
-import requests
-import os
+name: Atualizar IPs OneDrive
 
-# 🔗 Endpoint oficial da Microsoft para IPs do Microsoft 365
-ENDPOINT_URL = "https://endpoints.office.com/endpoints/worldwide?clientrequestid=b10c5ed1-bad1-445f-b386-b919946339a7"
+on:
+  schedule:
+    - cron: '0 4 * * *'  # 1h da manhã no Brasil (UTC−3)
+  workflow_dispatch:
 
-# 📄 Caminho do arquivo de saída
-ARQUIVO_SAIDA = "providers/onedrive_ips.txt"
+jobs:
+  update-onedrive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v3
 
-def buscar_ips_onedrive():
-    print("🔄 Buscando IPs do OneDrive...")
-    response = requests.get(ENDPOINT_URL)
-    response.raise_for_status()
-    dados = response.json()
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
 
-    ips = set()
-    for item in dados:
-        nome_servico = item.get("serviceAreaDisplayName", "")
-        if "OneDrive" in nome_servico:
-            print(f"📦 Encontrado bloco: {nome_servico}")
-            for ip in item.get("ips", []):
-                ips.add(ip)
+      - name: Instalar dependência
+        run: pip install requests
 
-    print(f"🔢 Total de IPs encontrados: {len(ips)}")
-    return sorted(ips)
+      - name: Executar script de atualização
+        run: python scripts/atualiza_onedrive.py
 
-def salvar_em_arquivo(lista_ips, caminho):
-    os.makedirs(os.path.dirname(caminho), exist_ok=True)
-    conteudo = "\n".join(lista_ips) + "\n"
+      - name: Commit e push (somente se houver alterações)
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
 
-    if os.path.exists(caminho):
-        with open(caminho, "r") as f:
-            if f.read().strip() == conteudo.strip():
-                print("ℹ️ Nenhuma alteração detectada.")
-                return False
-
-    with open(caminho, "w") as f:
-        f.write(conteudo)
-    print(f"✅ IPs salvos em: {caminho}")
-    return True
-
-def main():
-    ips = buscar_ips_onedrive()
-    if not ips:
-        print("🛑 Nenhum IP encontrado. Verifique o endpoint ou os filtros.")
-        return
-
-    alterado = salvar_em_arquivo(ips, ARQUIVO_SAIDA)
-    if alterado:
-        print("🚀 Lista atualizada com sucesso.")
-    else:
-        print("📁 Lista já estava atualizada.")
-
-if __name__ == "__main__":
-    main()
+          if git diff --quiet providers/onedrive_ips.txt; then
+            echo "Nenhuma alteração detectada."
+          else
+            git add providers/onedrive_ips.txt
+            git commit -m "Atualização OneDrive: $(date +'%Y-%m-%d %H:%M:%S')"
+            git push
+          fi
