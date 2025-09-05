@@ -2,8 +2,8 @@ name: Atualizar IPs AnyDesk
 
 on:
   schedule:
-    - cron: '0 4 * * *'  # Executa a cada 6 horas
-  workflow_dispatch:        # Permite execução manual
+    - cron: '0 4 * * *'  # Executa diariamente às 1h da manhã no Brasil (UTC−3)
+  workflow_dispatch:      # Permite execução manual
 
 jobs:
   update:
@@ -18,8 +18,9 @@ jobs:
 
       - name: Gerar lista de IPs
         run: |
-          dig +short relays.net.anydesk.com > anydesk_ips.txt
-          sort -u anydesk_ips.txt -o anydesk_ips.txt
+          mkdir -p providers
+          dig +short relays.net.anydesk.com > providers/anydesk_ips.txt
+          sort -u providers/anydesk_ips.txt -o providers/anydesk_ips.txt
 
       - name: Commit e Push
         env:
@@ -27,12 +28,12 @@ jobs:
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
-          
+
           # Atualiza a URL remota para usar autenticação via token
           git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}
 
           # Adiciona e faz commit se houver alterações
-          git add anydesk_ips.txt
+          git add providers/anydesk_ips.txt
 
           if git diff --cached --quiet; then
             echo "Nenhuma mudança no arquivo. Nada para comitar."
