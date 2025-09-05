@@ -2,17 +2,17 @@ name: Atualizar IPs AWS
 
 on:
   schedule:
-    - cron: '0 3 * * *'  # Executa todo dia às 3h da manhã
+    - cron: '0 6 * * *'  # 3h da manhã no Brasil (UTC+3)
   workflow_dispatch:
 
 jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout do repositório
         uses: actions/checkout@v3
 
-      - name: Setup Python
+      - name: Configurar Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
@@ -20,23 +20,22 @@ jobs:
       - name: Instalar dependências
         run: pip install requests
 
-      - name: Rodar script
-        run: python aws_ip_filter.py
+      - name: Executar script de atualização
+        run: python scripts/aws_ip_filter.py
 
       - name: Verificar arquivo gerado
         run: |
-          ls -l aws_ips.txt
-          cat aws_ips.txt
+          ls -l providers/aws_ips.txt
+          cat providers/aws_ips.txt
 
       - name: Commit e push (somente se houver alterações)
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
 
-          if git diff --quiet aws_ips.txt; then
+          if git diff --quiet providers/aws_ips.txt; then
             echo "Nenhuma alteração detectada. Nada para commit."
           else
-            git add aws_ips.txt
+            git add providers/aws_ips.txt
             git commit -m "Atualiza IPs AWS: $(date +'%Y-%m-%d %H:%M:%S')"
             git push
-          fi
