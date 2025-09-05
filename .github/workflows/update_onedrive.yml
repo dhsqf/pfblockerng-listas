@@ -1,0 +1,26 @@
+name: Atualizar IPs OneDrive
+
+on:
+  schedule:
+    - cron: '0 4 * * *'  # 1h da manhã no Brasil (UTC+3)
+  workflow_dispatch:
+
+jobs:
+  update-onedrive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - run: python scripts/atualiza_onedrive.py
+      - run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          if git diff --quiet providers/onedrive_ips.txt; then
+            echo "Nenhuma alteração detectada."
+          else
+            git add providers/onedrive_ips.txt
+            git commit -m "Atualização OneDrive: $(date +'%Y-%m-%d %H:%M:%S')"
+            git push
