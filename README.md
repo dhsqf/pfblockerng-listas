@@ -10,11 +10,9 @@ Este repositório mantém listas públicas de IPs e domínios para uso com pfBlo
 |------------------|----------|--------------------------|
 | AWS              | IPs      | https://raw.githubusercontent.com/dhsqf/pfblockerng-listas/main/providers/aws_ips.txt  
 | Anydesk          | IPs      | https://raw.githubusercontent.com/dhsqf/pfblockerng-listas/main/providers/anydesk_ips.txt  
-| Microsoft 365    | IPs      | https://raw.githubusercontent.com/dhsqf/pfblockerng-listas/main/providers/microsoft_ips.txt  
 | Microsoft OneDrive | IPs    | https://raw.githubusercontent.com/dhsqf/pfblockerng-listas/main/providers/onedrive_ips.txt  
 | Cloudflare       | IPs      | https://raw.githubusercontent.com/dhsqf/pfblockerng-listas/main/providers/cloudflare_ips.txt  
 | Google Services  | IPs      | https://raw.githubusercontent.com/dhsqf/pfblockerng-listas/main/providers/google_ips.txt  
-| Bancos           | Domínios | https://raw.githubusercontent.com/dhsqf/pfblockerng-listas/main/providers/sitesBancos.txt  
 
 ---
 
