@@ -26,7 +26,7 @@ jobs:
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git add meta-cidr.txt
+          git add providers/meta_ips.txt
           git diff --cached --quiet || (
             git commit -m "Atualizar lista Meta CIDR"
             git push
