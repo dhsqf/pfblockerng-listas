@@ -1,0 +1,33 @@
+name: Atualizar Lista CIDR Meta
+
+on:
+  schedule:
+    - cron: '0 3 * * *'  # executa todo dia às 3h UTC
+  workflow_dispatch:
+
+jobs:
+  update-list:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      
+      - name: Instalar requests
+        run: pip install requests
+      
+      - name: Executar script de atualização
+        run: python atualiza_meta.py
+      
+      - name: Commit e push se houve mudanças
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add meta-cidr.txt
+          git diff --cached --quiet || (
+            git commit -m "Atualizar lista Meta CIDR"
+            git push
+          )
