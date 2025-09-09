@@ -20,7 +20,7 @@ jobs:
         run: pip install requests
       
       - name: Executar script de atualização
-        run: python atualiza_meta.py
+        run: python scripts/atualiza_meta.py
       
       - name: Commit e push se houve mudanças
         run: |
