@@ -14,7 +14,7 @@ def main():
 
     cidrs = extrair_cidrs(data)
 
-    with open('meta-cidr.txt', 'w') as f:
+    with open('providers/meta_ips.txt', 'w') as f:
         for cidr in cidrs:
             f.write(cidr + '\n')
 
