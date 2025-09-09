@@ -1,0 +1,32 @@
+name: Atualizar IPs Fastly
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # Executa diariamente às 23h no Brasil (UTC−3)
+  workflow_dispatch:
+
+jobs:
+  update-fastly:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependência
+        run: pip install requests
+
+      - name: Executar script
+        run: python scripts/atualiza_fastly.py
+
+      - name: Commit e push (se houver alterações)
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          if git diff --quiet providers/fastly_ips.txt; then
+            echo "Nenhuma alteração detectada."
+          else
+            git add providers/fastly_ips.txt
+            git commit -m "Atualização Fastly: $(date +'%Y-%m-%d %H:%M:%S')"
+            git push
