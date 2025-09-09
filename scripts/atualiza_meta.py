@@ -1,62 +1,33 @@
-import requests
-import os
+name: Atualizar IPs Meta
 
-# 📄 Caminho do arquivo de saída
-ARQUIVO_SAIDA = "providers/meta_ips.txt"
+on:
+  schedule:
+    - cron: '0 5 * * *'  # 2h da manhã no Brasil (UTC−3)
+  workflow_dispatch:
 
-# 🔢 Lista de ASNs da Meta
-ASNS_META = ["AS32934", "AS54115", "AS149642"]
+jobs:
+  update-meta:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
 
-# 🔗 Endpoint base da API ipinfo.io (gratuito até certo limite)
-API_BASE = "https://ipinfo.io/{asn}/json"
+      - name: Instalar dependência
+        run: pip install requests
 
-def buscar_ips_meta():
-    print("🔄 Buscando IPs da Meta via ipinfo.io...")
-    ips = set()
+      - name: Executar script
+        run: python scripts/atualiza_meta.py
 
-    for asn in ASNS_META:
-        url = API_BASE.format(asn=asn)
-        print(f"🔍 Consultando {asn}...")
-        response = requests.get(url)
-        if response.status_code != 200:
-            print(f"⚠️ Falha ao consultar {asn}: {response.status_code}")
-            continue
-
-        data = response.json()
-        for prefix in data.get("prefixes", []):
-            ip = prefix.get("netblock")
-            if ip:
-                ips.add(ip)
-
-    print(f"🔢 Total de IPs encontrados: {len(ips)}")
-    return sorted(ips)
-
-def salvar_em_arquivo(lista_ips, caminho):
-    os.makedirs(os.path.dirname(caminho), exist_ok=True)
-    conteudo = "\n".join(lista_ips) + "\n"
-
-    if os.path.exists(caminho):
-        with open(caminho, "r") as f:
-            if f.read().strip() == conteudo.strip():
-                print("ℹ️ Nenhuma alteração detectada.")
-                return False
-
-    with open(caminho, "w") as f:
-        f.write(conteudo)
-    print(f"✅ IPs salvos em: {caminho}")
-    return True
-
-def main():
-    ips = buscar_ips_meta()
-    if not ips:
-        print("🛑 Nenhum IP encontrado.")
-        return
-
-    alterado = salvar_em_arquivo(ips, ARQUIVO_SAIDA)
-    if alterado:
-        print("🚀 Lista atualizada com sucesso.")
-    else:
-        print("📁 Lista já estava atualizada.")
-
-if __name__ == "__main__":
-    main()
+      - name: Commit e push (se houver alterações)
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          if git diff --quiet providers/meta_ips.txt; then
+            echo "Nenhuma alteração detectada."
+          else
+            git add providers/meta_ips.txt
+            git commit -m "Atualização Meta: $(date +'%Y-%m-%d %H:%M:%S')"
+            git push
+          fi
