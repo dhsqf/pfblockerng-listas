@@ -1,33 +1,52 @@
-name: Atualizar IPs Meta
+import requests
+import re
+import os
 
-on:
-  schedule:
-    - cron: '0 5 * * *'  # 2h da manhã no Brasil (UTC−3)
-  workflow_dispatch:
+ARQUIVO_SAIDA = "providers/meta_ips.txt"
+ASNS_META = ["AS32934", "AS54115", "AS149642"]
 
-jobs:
-  update-meta:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
+def extrair_blocos(asn):
+    print(f"🔍 Consultando {asn} via bgp.he.net...")
+    url = f"https://bgp.he.net/{asn}#_prefixes"
+    response = requests.get(url)
+    if response.status_code != 200:
+        print(f"⚠️ Falha ao acessar {asn}: {response.status_code}")
+        return []
 
-      - name: Instalar dependência
-        run: pip install requests
+    blocos = re.findall(r'(\d{1,3}(?:\.\d{1,3}){3}/\d{1,2})', response.text)
+    print(f"📦 {asn}: {len(blocos)} blocos encontrados")
+    return blocos
 
-      - name: Executar script
-        run: python scripts/atualiza_meta.py
+def salvar_em_arquivo(lista_ips, caminho):
+    os.makedirs(os.path.dirname(caminho), exist_ok=True)
+    conteudo = "\n".join(sorted(set(lista_ips))) + "\n"
 
-      - name: Commit e push (se houver alterações)
-        run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
-          if git diff --quiet providers/meta_ips.txt; then
-            echo "Nenhuma alteração detectada."
-          else
-            git add providers/meta_ips.txt
-            git commit -m "Atualização Meta: $(date +'%Y-%m-%d %H:%M:%S')"
-            git push
-          fi
+    if os.path.exists(caminho):
+        with open(caminho, "r") as f:
+            if f.read().strip() == conteudo.strip():
+                print("ℹ️ Nenhuma alteração detectada.")
+                return False
+
+    with open(caminho, "w") as f:
+        f.write(conteudo)
+    print(f"✅ IPs salvos em: {caminho}")
+    return True
+
+def main():
+    todos_blocos = []
+    for asn in ASNS_META:
+        blocos = extrair_blocos(asn)
+        todos_blocos.extend(blocos)
+
+    if not todos_blocos:
+        print("🛑 Nenhum bloco IP encontrado.")
+        return
+
+    alterado = salvar_em_arquivo(todos_blocos, ARQUIVO_SAIDA)
+    if alterado:
+        print("🚀 Lista atualizada com sucesso.")
+    else:
+        print("📁 Lista já estava atualizada.")
+
+if __name__ == "__main__":
+    main()
