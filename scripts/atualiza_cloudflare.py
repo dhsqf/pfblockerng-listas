@@ -1,24 +1,16 @@
+import requests
 import os
 
 ARQUIVO_SAIDA = "providers/cloudflare_ips.txt"
+CLOUDFLARE_IPV4_URL = "https://www.cloudflare.com/ips-v4"
 
-ipv4 = [
-    "173.245.48.0/20",
-    "103.21.244.0/22",
-    "103.22.200.0/22",
-    "103.31.4.0/22",
-    "141.101.64.0/18",
-    "108.162.192.0/18",
-    "190.93.240.0/20",
-    "188.114.96.0/20",
-    "197.234.240.0/22",
-    "198.41.128.0/17",
-    "162.158.0.0/15",
-    "104.16.0.0/13",
-    "104.24.0.0/14",
-    "172.64.0.0/13",
-    "131.0.72.0/22"
-]
+def buscar_ips_cloudflare():
+    print("🔄 Buscando IPs IPv4 da Cloudflare...")
+    response = requests.get(CLOUDFLARE_IPV4_URL)
+    response.raise_for_status()
+    ipv4 = response.text.strip().splitlines()
+    print(f"📦 IPv4 encontrados: {len(ipv4)}")
+    return sorted(ipv4)
 
 def salvar_em_arquivo(ips, caminho):
     os.makedirs(os.path.dirname(caminho), exist_ok=True)
@@ -35,5 +27,17 @@ def salvar_em_arquivo(ips, caminho):
     print(f"✅ IPs salvos em: {caminho}")
     return True
 
+def main():
+    ips = buscar_ips_cloudflare()
+    if not ips:
+        print("🛑 Nenhum IP encontrado.")
+        return
+
+    alterado = salvar_em_arquivo(ips, ARQUIVO_SAIDA)
+    if alterado:
+        print("🚀 Lista atualizada com sucesso.")
+    else:
+        print("📁 Lista já estava atualizada.")
+
 if __name__ == "__main__":
-    salvar_em_arquivo(ipv4, ARQUIVO_SAIDA)
+    main()
