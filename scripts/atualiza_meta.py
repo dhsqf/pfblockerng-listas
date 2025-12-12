@@ -42,9 +42,15 @@ def main():
         print("🛑 Nenhum bloco IP encontrado.")
         return
 
-    alterado = salvar_em_arquivo(todos_blocos, ARQUIVO_SAIDA)
+    # 🛡️ Filtrar 0.0.0.0/0 (anywhere) - adicionado para evitar regras genéricas
+    blocos_filtrados = [bloco for bloco in todos_blocos if bloco != "0.0.0.0/0"]
+    
+    if len(blocos_filtrados) != len(todos_blocos):
+        print(f"🗑️ Removido 0.0.0.0/0 da lista ({len(todos_blocos) - len(blocos_filtrados)} ocorrência(s))")
+    
+    alterado = salvar_em_arquivo(blocos_filtrados, ARQUIVO_SAIDA)
     if alterado:
-        print("🚀 Lista atualizada com sucesso.")
+        print("🚀 Lista atualizada com sucesso (sem 0.0.0.0/0).")
     else:
         print("📁 Lista já estava atualizada.")
 
