@@ -496,3 +496,5 @@
 92.38.180.106
 92.38.180.107
 92.38.180.108
+;; Connection to 127.0.0.100#53(127.0.0.100) for relays.net.anydesk.com failed: connection refused.
+;; no servers could be reached
