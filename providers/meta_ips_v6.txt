@@ -1,0 +1,7 @@
+# Meta IPv6 - ASNs: AS32934, AS54115, AS149642
+# Fonte: RIPEstat announced-prefixes
+# Gerado em: 2026-11-26 13:45 UTC
+# Prefixos: 3
+2620:0:1c00::/40
+2620:10d:c090::/44
+2a03:2880::/32
