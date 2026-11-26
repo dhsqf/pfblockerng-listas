@@ -2,17 +2,33 @@ name: Atualizar IPs Meta
 
 on:
   schedule:
-    - cron: '0 5 * * *'  # 2h da manhã no Brasil (UTC−3)
+    - cron: '17 5 * * *'  # ~02h17 no Brasil (UTC−3); minuto "quebrado" sofre menos atraso no Actions
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Somente testar (não faz commit)'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+# Evita dois workflows fazendo push ao mesmo tempo na mesma branch.
+# Use o MESMO nome de grupo em todos os workflows do repositório.
+concurrency:
+  group: atualiza-listas
+  cancel-in-progress: false
 
 jobs:
   update-meta:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
+
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       - name: Instalar dependência
         run: pip install requests
@@ -20,14 +36,24 @@ jobs:
       - name: Executar script
         run: python scripts/atualiza_meta.py
 
-      - name: Commit e push (se houver alterações)
+      - name: Mostrar resultado
         run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
-          if git diff --quiet providers/meta_ips.txt; then
+          git add -N providers/meta_ips*.txt   # faz o diff enxergar arquivo novo (v6)
+          git diff --stat -- providers/
+          git diff -- providers/ | head -100
+          echo "---"
+          wc -l providers/meta_ips*.txt
+
+      - name: Commit e push (se houver alterações)
+        if: ${{ github.event_name == 'schedule' || inputs.dry_run == false }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add providers/meta_ips*.txt
+          if git diff --cached --quiet; then
             echo "Nenhuma alteração detectada."
-          else
-            git add providers/meta_ips.txt
-            git commit -m "Atualização Meta: $(date +'%Y-%m-%d %H:%M:%S')"
-            git push
+            exit 0
           fi
+          git commit -m "Atualização Meta: $(date -u +'%Y-%m-%d %H:%M UTC')"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
